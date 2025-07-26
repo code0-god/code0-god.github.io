@@ -1,12 +1,12 @@
 ---
 title: Start my life process
 author: zerogod
-date: 2025-07-27 05:00 +0900
+date: 2025-07-27 05:00
 categories: [etc]
 tags: [start]
 render_with_liquid: false
 ---
-# ***First Post***
+## ***First Post***
 ---
 ```cpp
 // PID 1 (init) only
