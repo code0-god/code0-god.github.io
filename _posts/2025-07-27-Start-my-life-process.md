@@ -10,7 +10,7 @@ render_with_liquid: false
 ---
 ```cpp
 // PID 1 (init) only
-if(getpid() == 1) {
+if (getpid() == 1) {
     printf("Hello, world!\n");
     if (fork() == 0) 
         printf("Let's study!\n");
