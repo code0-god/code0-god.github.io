@@ -1,8 +1,20 @@
 ---
 title: Start my life process
 author: zerogod
+date: 2025-07-27 05:00 +0900
 categories: [etc]
 tags: [start]
 render_with_liquid: false
 ---
-이건 나의 테스트
+# ***First Post***
+---
+```cpp
+// PID 1 (init) only
+if(getpid() == 1) {
+    printf("Hello, world!\n");
+    if (fork() == 0) 
+        printf("Let's study!\n");
+}
+```
+Just as the init process forks a new life, today I fork this blog into existence.   
+From this moment on, every insight will be logged, every fault examined, and every reflection will guide the next execution.
