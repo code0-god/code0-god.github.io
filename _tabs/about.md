@@ -12,9 +12,16 @@ student@code0-god.github.io:~$ ./life
 [RESUME]   Execution resumed
 student@code0-god.github.io:~$ 
 ```
-# ***About Code0: Exception***
-Welcome to Code0: Exception, a personal log and reflection space by a computer‑architecture researcher and enthusiast.   
-I document my journey in ***C/C++***, ***Computer Organization & Architecture (CO&A)***, ***Operating Systems (OS)***, ***AI acceleration (AI-accel)*** research (as an undergrad intern), ***Coding Challenges***, and ***Data Structures & Algorithms***.   
+# ***About Code0: ***
+Welcome to ***Code0:*** , a personal log and reflection space by a computer‑architecture researcher and enthusiast.   
+I document my journey in as follows:   
+- ***C/C++***
+- ***Computer Organization & Architecture (CO&A)***
+- ***Operating Systems (OS)*** 
+- ***AI acceleration (AI-accel)*** research (as an undergrad intern), 
+- ***Coding Challenges***
+- ***Data Structures & Algorithms***   
+
 Here, system faults and unexpected traps in both silicon and life become an opportunities to record, reflect, and resume.
 
 ## ***Philosophy***
