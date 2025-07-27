@@ -1,0 +1,20 @@
+---
+title: "[Linux] Outline"
+author: zerogod
+date: 2025-07-27 09:54
+categories: [Linux]
+tags: [linux, cli, command]
+render_with_liquid: false
+---
+## ***About Linux Category***
+This category focuses on the **Linux** operating system, especially in the context of **development environments** and **command-line usage**.
+
+Covered topics include:
+- Linux command-line utilities (`bash`, `grep`, `find`, `chmod`, etc.)
+- System configuration for development (compilers, debuggers, shells)
+- Package management and environment setup
+- Bash scripting and automation
+- File systems and permissions
+- Developer tools (e.g., `tmux`, `vim`, `git`, etc.)
+
+> 🐧 The goal is to build strong **Linux fluency** for development, debugging, and server-side operations.
