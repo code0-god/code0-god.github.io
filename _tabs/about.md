@@ -5,14 +5,14 @@ order: 4
 ---
 ```shell
 student@code0-god.github.io:~$ ./life
-[INIT]     Launching life process (PID 0)
+[INIT]     Launching life process (PID 1)
 [FAULT]    Unrecoverable condition encountered
 [LOG]      Dumping state to /var/log/life.log
 [REFLECT]  Reflection service started
 [RESUME]   Execution resumed
 student@code0-god.github.io:~$ 
 ```
-# ***About Code0: ***
+# ***About Code0:***
 Welcome to ***Code0:*** , a personal log and reflection space by a computer‑architecture researcher and enthusiast.   
 I document my journey in as follows:   
 - ***C/C++***
