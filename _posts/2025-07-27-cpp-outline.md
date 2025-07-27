@@ -1,0 +1,21 @@
+---
+title: "[C/C++] First post - Outline"
+author: zerogod
+date: 2025-07-27 09:42
+categories: [C/C++]
+tags: [C, C++]
+render_with_liquid: false
+---
+## ***About C/C++ Category***
+This category covers key aspect of the **C** and **C++** programming languages, focusing on:
+- **Syntax** and **semantics**
+- **Standard libraries**
+- **Practical usage**
+
+***Reference standars:***
+> - *C17* 
+> - *C++20*
+
+## ***Author's Note***
+C++ is the main topic of this category, but foundational concepts of C will also be addressed when necessary.  
+This space will serve both as a **learning log** and **knowledge archive** for deep diving into the world of system-level programming.
