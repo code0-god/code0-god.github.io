@@ -36,7 +36,7 @@ Each post includes lessons learned, acting as a “reflection daemon” that tur
 
 ## ***What You’ll Find Here***
 - ***Study Notes***   
-***C/C++*** tips, ***CO&A*** topics, ***OS*** internals, ***AI-accel***, and more.
+***C/C++*** tips, ***CO&A*** topics, ***OS*** internals, ***AI-accel Research***, and more.
 
 - ***Project Logs***   
 Undergrad AI‑acceleration research, hardware benchmarks, system‑level experiments, and internship stories.
@@ -52,7 +52,7 @@ Lessons from failures, performance tuning stories, debugging journeys, and retro
 A rolling feed of the latest logs and posts.
 
 2. ***Tags***   
-Browse by topic: C/C++, CO&A, OS, AI-accel and more.
+Browse by topic: C/C++, CO&A, OS, research and more.
 
 3. ***About***   
 (You’re here!) Principles and purpose behind this site.
