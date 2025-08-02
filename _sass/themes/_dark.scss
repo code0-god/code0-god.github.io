@@ -301,3 +301,149 @@
     color: #90a959;
   }
 }
+/* _sass/themes/_dark.scss  (or your custom CSS) */
+/* --- VS Code Dark+ – Rouge 토큰 → 색상 매핑 (v2.9) --- */
+
+.language-cpp.highlighter-rouge,
+.language-c.highlighter-rouge {
+  background: #1e1e1e !important;
+  border: 1px solid #2d2d2d !important;
+  padding: 0.75rem !important;
+  overflow-x: auto !important;
+}
+
+/* 주석 */
+.highlight .c,
+.highlight .cm,
+.highlight .c1,
+.highlight .cs {
+  color: #6A9955 !important;
+  font-style: italic !important;
+}
+
+/* 오류 토큰 (‘?’) */
+.highlight .err {
+  color: #ffffff !important;
+  background: #F44747 !important;
+}
+
+/* 전처리 지시문 & 매크로 */
+.highlight .cp,
+.highlight .cpf {
+  color: #D16D9E !important;
+  font-weight: bold !important;
+}
+/* 매크로 이름 */
+.highlight .no {
+  color: #4EC9B0 !important;
+}
+
+/* 키워드 분류 */
+/* 선언 키워드: class/struct/template 등 */
+.highlight .kd {
+  color: #569CD6 !important;
+  font-weight: bold !important;
+}
+/* 제어 흐름 키워드: for/if/while 등 */
+.highlight .kr {
+  color: #569CD6 !important;
+  font-weight: bold !important;
+}
+/* 타입 키워드: int/auto 등 */
+.highlight .kt {
+  color: #4EC9B0 !important;
+}
+/* 상수 키워드: const/constexpr */
+.highlight .kc {
+  color: #D7BA7D !important;
+}
+/* 그 외 일반 키워드 */
+.highlight .k {
+  color: #569CD6 !important;
+}
+
+/* 네임스페이스 */
+.highlight .kn { /* namespace 키워드 */
+  color: #569CD6 !important;
+  font-weight: bold !important;
+}
+.highlight .nn { /* namespace 식별자 */
+  color: #4EC9B0 !important;
+}
+
+/* STL · 전역 객체 */
+.highlight .nb {
+  color: #DCDCAA !important;
+}
+
+/* 함수/생성자 */
+.highlight .nf {
+  color: #DCDCAA !important;
+}
+
+/* 변수 */
+.highlight .nv {
+  color: #9CDCFE !important;
+}
+
+/* 클래스/타입 이름 */
+.highlight .nc {
+  color: #4EC9B0 !important;
+}
+
+/* 접근 지정자 */
+.highlight .nl {
+  color: #C586C0 !important;
+  font-weight: bold !important;
+}
+
+/* 문자열 리터럴 */
+.highlight .s,
+.highlight .sb,
+.highlight .s1,
+.highlight .s2,
+.highlight .sd,
+.highlight .sh,
+.highlight .si,
+.highlight .sr,
+.highlight .sx,
+.highlight .ss {
+  color: #CE9178 !important;
+}
+/* 문자열 이스케이프 */
+.highlight .se {
+  color: #D7BA7D !important;
+}
+
+/* 숫자 리터럴 */
+.highlight .m,
+.highlight .mi,
+.highlight .mf,
+.highlight .il,
+.highlight .mh,
+.highlight .mb,
+.highlight .mo,
+.highlight .mx {
+  color: #B5CEA8 !important;
+}
+
+/* 연산자 & 구두점 */
+.highlight .o,
+.highlight .ow,
+.highlight .p,
+.highlight .pi {
+  color: #D4D4D4 !important;
+}
+
+/* GitHub-diff 스타일 (선택) */
+.highlight .gh,
+.highlight .gp {
+  color: #6A9FB5 !important;
+  font-weight: bold !important;
+}
+.highlight .gi {
+  color: #B5CEA8 !important;
+}
+.highlight .gd {
+  color: #F44747 !important;
+}
