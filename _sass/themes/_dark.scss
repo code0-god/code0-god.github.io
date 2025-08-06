@@ -330,8 +330,7 @@
 /* 전처리 지시문 & 매크로 */
 .highlight .cp,
 .highlight .cpf {
-  color: #D16D9E !important;
-  font-weight: bold !important;
+  color: #ffcc00 !important;
 }
 /* 매크로 이름 */
 .highlight .no {
@@ -347,7 +346,6 @@
 /* 제어 흐름 키워드: for/if/while 등 */
 .highlight .kr {
   color: #569CD6 !important;
-  font-weight: bold !important;
 }
 /* 타입 키워드: int/auto 등 */
 .highlight .kt {
@@ -365,7 +363,6 @@
 /* 네임스페이스 */
 .highlight .kn { /* namespace 키워드 */
   color: #569CD6 !important;
-  font-weight: bold !important;
 }
 .highlight .nn { /* namespace 식별자 */
   color: #4EC9B0 !important;
