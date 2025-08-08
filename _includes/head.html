@@ -104,6 +104,22 @@
 
   <script src="{{ '/assets/js/dist/theme.min.js' | relative_url }}"></script>
 
+  <!-- 3) Monaco AMD 로더 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.js"></script>
+  <script>
+    require.config({
+      paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }
+    });
+  </script>
+
+  <!-- 4) OneCompiler API 키 -->
+  <script>
+    window.ONECOMPILER_API_KEY = '{{ site.env.ONECOMPILER_API_KEY }}';
+  </script>
+
+  <!-- 5) CodeRunner 초기화 -->
+  <script src="{{ '/assets/js/code_runner.js' | relative_url }}"></script>
+  
   {% include js-selector.html lang=lang %}
 
   {% if jekyll.environment == 'production' %}
