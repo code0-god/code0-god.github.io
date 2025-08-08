@@ -25,8 +25,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:  
-      ONECOMPILER_API_KEY: ${{ secrets.ONECOMPILER_API_KEY }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,10 +34,6 @@ jobs:
           # submodules: true
           # If using the 'assets' git submodule from Chirpy Starter, uncomment above
           # (See: https://github.com/cotes2020/chirpy-starter/tree/main/assets)
-
-      - name: Set environment variables
-        run: |
-          echo "ONECOMPILER_API_KEY=${{ secrets.ONECOMPILER_API_KEY }}" >> $GITHUB_ENV
 
       - name: Setup Pages
         id: pages
@@ -52,6 +47,8 @@ jobs:
 
       - name: Build site
         run: bundle exec jekyll b -d "_site${{ steps.pages.outputs.base_path }}"
+        env:
+          JEKYLL_ENV: "production"
 
       - name: Test site
         run: |

@@ -1,5 +1,3 @@
-// assets/js/code_runner.js
-
 (function(){
   window._monacoReady = window._monacoReady ||
     new Promise(resolve => require(['vs/editor/editor.main'], resolve));
@@ -27,12 +25,11 @@
       runBtn.addEventListener('click', () => {
         const out = document.getElementById(`console-${id}`);
         out.textContent = 'Running…';
-        fetch('https://onecompiler-apis.p.rapidapi.com/api/v1/run', {
+        
+        fetch('https://ornate-beijinho-0548f2.netlify.app/.netlify/functions/run-code', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'X-RapidAPI-Key': window.ONECOMPILER_API_KEY,
-            'X-RapidAPI-Host': 'onecompiler-apis.p.rapidapi.com'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             language: lang,
@@ -44,8 +41,12 @@
           })
         })
         .then(res => res.json())
-        .then(j => { out.textContent = j.stdout || j.output || j.errors || j.stderr || 'No output'; })
-        .catch(e => { out.textContent = 'Error: ' + e.message; });
+        .then(j => {
+          out.textContent = j.stdout || j.output || j.errors || j.stderr || 'No output';
+        })
+        .catch(e => {
+          out.textContent = 'Error: ' + e.message;
+        });
       });
     });
   }
