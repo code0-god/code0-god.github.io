@@ -114,12 +114,17 @@
 
   <!-- 4) OneCompiler API 키 -->
   <script>
-    window.ONECOMPILER_API_KEY = '{{ site.env.ONECOMPILER_API_KEY }}';
+    window.ONECOMPILER_API_KEY =
+    {% if jekyll.environment == "production" %}
+      '{{ ENV["ONECOMPILER_API_KEY"] }}'
+    {% else %}
+      '{{ site.env.ONECOMPILER_API_KEY }}'
+    {% endif %};
   </script>
 
   <!-- 5) CodeRunner 초기화 -->
   <script src="{{ '/assets/js/code_runner.js' | relative_url }}"></script>
-  
+
   {% include js-selector.html lang=lang %}
 
   {% if jekyll.environment == 'production' %}
