@@ -1,0 +1,100 @@
+// _sass/_code-runner.scss
+
+.code-runner-wrapper {
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #232323;
+  overflow: hidden;
+  margin-bottom: 2em;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── HEADER ──── */
+.code-runner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6em 1em;
+  background: linear-gradient(135deg, #2b2b2b, #1f1f1f);
+  border-bottom: 1px solid #555;
+}
+
+.code-runner-filename {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1em;
+  font-weight: 500;
+  color: #e0e0e0;
+  user-select: none;
+  margin: 0;
+}
+
+.code-runner-run {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5em 0.8em;
+  line-height: 1;
+  background: #d43f5a;
+  color: #fff;
+  border: 1px solid #ad3246;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .2s, border-color .1s;
+}
+
+.code-runner-run:hover {
+  background: #ad3246;
+  border-color: #8b2938;
+}
+
+/* ─── EDITOR ──── */
+.code-runner-editor {
+  background: #1e1e1e;
+  /* 헤더 아래 상단 패딩만 주기 */
+  padding-top: 0.75rem;
+  min-height: 180px;
+  position: relative;
+}
+
+/* Monaco 에디터 컨테이너 높이와 스크롤 제어 */
+.code-runner-editor .monaco-editor,
+.code-runner-editor .monaco-editor .overflow-guard {
+  background: #1e1e1e !important;
+}
+
+.code-runner-editor .monaco-editor,
+.code-runner-editor .monaco-editor .overflow-guard {
+  background: #1e1e1e !important;
+}
+.code-runner-editor .monaco-editor,
+.code-runner-editor .monaco-editor .overflow-guard {
+  background: #1e1e1e !important;
+}
+
+/* ─── CONSOLE ─── */
+.code-runner-console {
+  padding: 1rem;
+  background: #111;
+  color: #0f0;
+  font-family: monospace;
+  font-size: 0.8em;
+  border-top: 1px solid #555;
+  min-height: 100px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+/* 커스텀 스크롤바 */
+.code-runner-editor::-webkit-scrollbar,
+.code-runner-console::-webkit-scrollbar {
+  width: 6px;
+}
+.code-runner-editor::-webkit-scrollbar-thumb,
+.code-runner-console::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 3px;
+}
