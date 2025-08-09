@@ -234,3 +234,6 @@ incremental: false
 
 plugins:
   - jekyll-dotenv
+
+include:
+  - embed

@@ -1,5 +1,3 @@
-// _sass/_code-runner.scss
-
 .code-runner-wrapper {
   border: 1px solid #444;
   border-radius: 8px;
@@ -11,7 +9,7 @@
   flex-direction: column;
 }
 
-/* ─── HEADER ──── */
+/* ─── HEADER ─── */
 .code-runner-header {
   display: flex;
   justify-content: space-between;
@@ -44,35 +42,25 @@
   font-weight: 500;
   cursor: pointer;
   transition: background .2s, border-color .1s;
+
+  &:hover {
+    background: #ad3246;
+    border-color: #8b2938;
+  }
 }
 
-.code-runner-run:hover {
-  background: #ad3246;
-  border-color: #8b2938;
-}
-
-/* ─── EDITOR ──── */
+/* ─── EDITOR ───
+   겉 컨테이너 패딩은 0으로 두고, padding은 Monaco 내부에서만 사용.
+   --editor-vpad 값은 iframe이 읽어 내부 padding(top/bottom)에 동일하게 적용. */
 .code-runner-editor {
+  --editor-vpad: 0.75em; /* 원하는 상/하 패딩 */
   background: #1e1e1e;
-  /* 헤더 아래 상단 패딩만 주기 */
-  padding-top: 0.75rem;
-  min-height: 180px;
+  padding: 0;            /* 겉 패딩 제거 (일관성 확보) */
+  min-height: 50px;
+  max-height: 380px;
   position: relative;
-}
-
-/* Monaco 에디터 컨테이너 높이와 스크롤 제어 */
-.code-runner-editor .monaco-editor,
-.code-runner-editor .monaco-editor .overflow-guard {
-  background: #1e1e1e !important;
-}
-
-.code-runner-editor .monaco-editor,
-.code-runner-editor .monaco-editor .overflow-guard {
-  background: #1e1e1e !important;
-}
-.code-runner-editor .monaco-editor,
-.code-runner-editor .monaco-editor .overflow-guard {
-  background: #1e1e1e !important;
+  overflow: hidden;      /* 스크롤은 Monaco 내부에서 처리 */
+  box-sizing: border-box;
 }
 
 /* ─── CONSOLE ─── */
@@ -86,15 +74,13 @@
   min-height: 100px;
   max-height: 200px;
   overflow: auto;
-}
 
-/* 커스텀 스크롤바 */
-.code-runner-editor::-webkit-scrollbar,
-.code-runner-console::-webkit-scrollbar {
-  width: 6px;
-}
-.code-runner-editor::-webkit-scrollbar-thumb,
-.code-runner-console::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.15);
-  border-radius: 3px;
+  /* 네이티브 스크롤바(콘솔) 스타일 */
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 3px;
+  }
+  scrollbar-width: thin;
+  scrollbar-color: #555 #111;
 }

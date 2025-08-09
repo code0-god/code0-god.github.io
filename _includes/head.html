@@ -103,16 +103,8 @@
   <!-- Scripts -->
 
   <script src="{{ '/assets/js/dist/theme.min.js' | relative_url }}"></script>
-
-  <!-- 3) Monaco AMD 로더 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.js"></script>
-  <script>
-    require.config({
-      paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }
-    });
-  </script>
-
-  <!-- 4) CodeRunner 초기화 -->
+  
+  <!-- Code Runner -->
   <script src="{{ '/assets/js/code_runner.js' | relative_url }}"></script>
   
   {% include js-selector.html lang=lang %}
