@@ -60,7 +60,17 @@
     require(['vs/editor/editor.main'], function () {
       const url = new URL(window.location.href);
       const lang = url.searchParams.get('lang') || 'cpp';
-      const code = atob(url.searchParams.get('code') || '');
+      let code = '';
+      try {
+        const raw = url.searchParams.get('code') || '';
+        // URL 디코딩 → '+' 복원 → base64 디코딩
+        const urlDecoded = decodeURIComponent(raw);
+        const plusFixed  = urlDecoded.replace(/ /g, '+');
+        code = atob(plusFixed);
+      } catch (e) {
+        console.warn('[embed] base64 decode failed:', e);
+        code = ''; // 안전 폴백
+      }
       const filename = url.searchParams.get('filename') || 'main.cpp';
       const runnerId = url.searchParams.get('id') || '';
 

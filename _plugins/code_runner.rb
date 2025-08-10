@@ -18,7 +18,8 @@ module Jekyll
     def render(context)
       code = super.strip
       fname = @filename.to_s.empty? ? "main.#{@language}" : @filename.include?('.') ? @filename : "#{@filename}.#{@language}"
-      encoded_code = Base64.strict_encode64(code)
+      raw_b64     = Base64.strict_encode64(code)
+      encoded_code = CGI.escape(raw_b64)
       iframe = <<~IFRAME
         <iframe class="code-runner-iframe"
           src="/embed/code_runner.html?id=#{@id}&lang=#{@language}&code=#{encoded_code}&filename=#{CGI.escape(fname)}"
