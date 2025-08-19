@@ -1,14 +1,47 @@
+<!-- _includes/mathjax_support.html -->
 <script>
-window.MathJax = {
-  tex: {
-    inlineMath: [['$', '$'], ['\\(', '\\)']],
-    displayMath: [['$$', '$$'], ['\\[', '\\]']],
-    tags: 'ams',               // equation numbering: "ams" 스타일
-    packages: {'[+]': ['ams']}
-  },
-  options: {
-    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-  }
-};
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']],
+      tags: 'ams',
+      packages: {'[+]': ['ams']}
+    },
+    options: {
+      /* 코드/러너/iframe 등은 렌더 제외: 충돌·성능 보호 */
+      ignoreHtmlClass: 'code-runner-wrapper|code-runner-editor|code-runner-console',
+      skipHtmlTags: ['script','noscript','style','textarea','pre','code','iframe']
+    }
+  };
 </script>
-<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="mjs"></script>
+
+<!-- 로더: MathJax v3 (tex-chtml) -->
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+<script>
+  (function () {
+    function typeset(target) {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        return window.MathJax.typesetPromise(target ? [target] : undefined)
+          .catch(function(err){ console.error('[MathJax] typeset error:', err); });
+      }
+    }
+
+    /* 초기 1회 */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){ typeset(document.body); });
+    } else {
+      typeset(document.body);
+    }
+
+    /* PJAX/동적 내비게이션 대응 (Chirpy 포함) */
+    window.addEventListener('pjax:complete', function(e){
+      typeset((e && e.target) || document.body);
+    });
+    /* 일부 환경 호환 (있으면 OK, 없으면 무시) */
+    window.addEventListener('pjax:success', function(e){
+      typeset((e && e.target) || document.body);
+    });
+  })();
+</script>
