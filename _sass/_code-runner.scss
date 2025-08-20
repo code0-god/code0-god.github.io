@@ -42,45 +42,70 @@
   font-weight: 500;
   cursor: pointer;
   transition: background .2s, border-color .1s;
-
-  &:hover {
-    background: #ad3246;
-    border-color: #8b2938;
-  }
 }
+.code-runner-run:hover { background:#ad3246; border-color:#8b2938; }
 
-/* ─── EDITOR ───
-   겉 컨테이너 패딩은 0으로 두고, padding은 Monaco 내부에서만 사용.
-   --editor-vpad 값은 iframe이 읽어 내부 padding(top/bottom)에 동일하게 적용. */
+/* ─── EDITOR ─── */
 .code-runner-editor {
-  --editor-vpad: 0.75em; /* 원하는 상/하 패딩 */
+  --editor-vpad: 0.75em;
   background: #1e1e1e;
-  padding: 0;            /* 겉 패딩 제거 (일관성 확보) */
+  padding: 0;
   min-height: 50px;
   max-height: 380px;
   position: relative;
-  overflow: hidden;      /* 스크롤은 Monaco 내부에서 처리 */
+  overflow: hidden;
   box-sizing: border-box;
 }
 
 /* ─── CONSOLE ─── */
 .code-runner-console {
   padding: 1rem;
-  background: #111;
-  color: #0f0;
-  font-family: monospace;
-  font-size: 0.8em;
+  background: #0e0e0e;
+  color: #ddd;                 /* 기본 텍스트 색 */
+  font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  font-size: 0.9em;
   border-top: 1px solid #555;
   min-height: 100px;
-  max-height: 200px;
+  max-height: 220px;
   overflow: auto;
-
-  /* 네이티브 스크롤바(콘솔) 스타일 */
-  &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 3px;
-  }
-  scrollbar-width: thin;
-  scrollbar-color: #555 #111;
+  white-space: pre;            /* 줄바꿈 보존 + 가로 스크롤 */
 }
+
+/* 스크롤바(콘솔) */
+.code-runner-console::-webkit-scrollbar { height: 8px; width: 8px; }
+.code-runner-console::-webkit-scrollbar-thumb { background:#555; border-radius: 3px; }
+.code-runner-console { scrollbar-width: thin; scrollbar-color:#555 #0e0e0e; }
+
+/* ANSI 스타일 */
+.cr-ansi-bold{ font-weight:700; }
+.cr-ansi-dim{ opacity:.8; }
+.cr-ansi-italic{ font-style:italic; }
+.cr-ansi-underline{ text-decoration:underline; }
+.cr-ansi-fg-black{ color:#222; }
+.cr-ansi-fg-red{ color:#f44747; }
+.cr-ansi-fg-green{ color:#4ec9b0; }
+.cr-ansi-fg-yellow{ color:#dcdcaa; }
+.cr-ansi-fg-blue{ color:#569cd6; }
+.cr-ansi-fg-magenta{ color:#c586c0; }
+.cr-ansi-fg-cyan{ color:#4fc1ff; }
+.cr-ansi-fg-white{ color:#eee; }
+.cr-ansi-fg-gray{ color:#999; }
+.cr-ansi-bg-red{ background:#5a0000; }
+.cr-ansi-bg-green{ background:#003a33; }
+.cr-ansi-bg-yellow{ background:#3a3000; }
+.cr-ansi-bg-blue{ background:#002b4a; }
+.cr-ansi-bg-magenta{ background:#3a0042; }
+.cr-ansi-bg-cyan{ background:#003646; }
+.cr-ansi-bg-white{ background:#555; }
+
+/* 패턴 하이라이트 */
+.cr-error{ color:#f44747; font-weight:700; }
+.cr-warning{ color:#dcdcaa; font-weight:700; }
+.cr-note{ color:#569cd6; font-weight:700; }
+
+.cr-file{ color:#4fc1ff; }       /* 파일명 */
+.cr-lineno{ color:#9aa0a6; }     /* 라인 번호 in header */
+.cr-col{ color:#9aa0a6; }        /* 컬럼 번호 */
+.cr-gutter{ color:#7d7d7d; }     /* " 3 | " 같은 구역 */
+.cr-caret{ color:#ff6b6b; font-weight:800; } /* ^~~~~ 강조 */
+.cr-symbol{ color:#c586c0; font-weight:600; } /* ‘심볼’/'심볼' */

@@ -3,146 +3,144 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Code Runner</title>
 
   <style>
     /* 외부 스크롤 차단, Monaco 내부 스크롤만 사용 */
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: #1e1e1e;
-      overflow: hidden;
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: #1e1e1e; overflow: hidden;
     }
 
     /* 에디터 컨테이너(높이는 JS에서 제어) */
-    #container {
-      width: 100%;
-      background: #1e1e1e;
-    }
+    #container { width: 100%; background: #1e1e1e; }
 
-    /* 가로 스크롤 방지 */
-    .monaco-editor .overflow-guard {
-      overflow-x: hidden !important;
-    }
+    /* 가로 스크롤 허용 */
+    .monaco-editor .overflow-guard { overflow-x: auto !important; }
 
-    /* ───────────────────────────────────────────────
-       Monaco 스크롤바 thumb 정확 타겟팅 + 전역 .slider 무력화
-       구조: .monaco-scrollable-element .scrollbar > .slider
-       ─────────────────────────────────────────────── */
+    /* 스크롤바 스타일 */
     .monaco-editor .monaco-scrollable-element .scrollbar > .slider {
-      background: rgba(128, 128, 128, 0.30) !important;
-      border-radius: 3px !important;
+      background: rgba(128,128,128,0.30) !important; border-radius: 3px !important;
     }
     .monaco-editor .monaco-scrollable-element .scrollbar:hover > .slider {
-      background: rgba(128, 128, 128, 0.50) !important;
+      background: rgba(128,128,128,0.50) !important;
     }
     .monaco-editor .monaco-scrollable-element .scrollbar > .slider.active {
-      background: rgba(128, 128, 128, 0.70) !important;
+      background: rgba(128,128,128,0.70) !important;
     }
   </style>
 
+  <!-- Monaco AMD 로더 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.js"></script>
+
   <script>
     /* global require, monaco */
 
     require.config({
-      paths: {
-        vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs'
-      }
+      paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }
     });
 
-    require(['vs/editor/editor.main'], function () {
+    function parseUrlParams() {
       const url = new URL(window.location.href);
-      const lang = url.searchParams.get('lang') || 'cpp';
+      const rawCode = url.searchParams.get('code') || '';
       let code = '';
       try {
-        const raw = url.searchParams.get('code') || '';
-        // URL 디코딩 → '+' 복원 → base64 디코딩
-        const urlDecoded = decodeURIComponent(raw);
-        const plusFixed  = urlDecoded.replace(/ /g, '+');
+        const urlDecoded = decodeURIComponent(rawCode);
+        const plusFixed = urlDecoded.replace(/ /g, '+');
         code = atob(plusFixed);
-      } catch (e) {
-        console.warn('[embed] base64 decode failed:', e);
-        code = ''; // 안전 폴백
-      }
-      const filename = url.searchParams.get('filename') || 'main.cpp';
-      const runnerId = url.searchParams.get('id') || '';
+      } catch (e) { console.warn('[embed] base64 decode failed:', e); code = ''; }
+      return {
+        lang: (url.searchParams.get('lang') || 'cpp').trim(),
+        filename: (url.searchParams.get('filename') || 'main.cpp').trim(),
+        runnerId: (url.searchParams.get('id') || '').trim(),
+        code
+      };
+    }
 
-      const MIN_HEIGHT = 50;
-      const MAX_HEIGHT = 380;
+    function getEditorVPadPx() {
+      try {
+        const iframeEl = window.frameElement;
+        if (iframeEl && iframeEl.parentElement) {
+          const host = iframeEl.parentElement;
+          const parentWindow = (iframeEl.ownerDocument || document).defaultView;
+          const cs = parentWindow.getComputedStyle(host);
+          let val = cs.getPropertyValue('--editor-vpad').trim();
+          if (!val) val = '0.75em';
+          const hostFontPx = parseFloat(cs.fontSize) || 16;
+          if (val.endsWith('rem')) {
+            const rootFs = parseFloat(parentWindow.getComputedStyle(
+              (iframeEl.ownerDocument || document).documentElement
+            ).fontSize) || 16;
+            return Math.round(parseFloat(val) * rootFs);
+          }
+          if (val.endsWith('em')) return Math.round(parseFloat(val) * hostFontPx);
+          if (val.endsWith('px')) return Math.round(parseFloat(val));
+          const n = parseFloat(val);
+          return Number.isNaN(n) ? 12 : Math.round(n);
+        }
+      } catch (e) {}
+      return 12;
+    }
 
+    function normalizeLangId(input) {
+      const raw = (input || '').toLowerCase();
+      const map = {
+        'c++':'cpp', 'c#':'csharp', 'cs':'csharp',
+        'py':'python', 'js':'javascript', 'ts':'typescript',
+        'sh':'bash', 'shell':'bash',
+        'plaintext':'text', 'text':'text',
+        'kt':'kotlin', 'rs':'rust'
+      };
+      return map[raw] || raw;
+    }
+
+    require(['vs/editor/editor.main'], async function () {
+      const { lang: urlLang, filename, runnerId, code } = parseUrlParams();
+      const langId = normalizeLangId(urlLang);
       const container = document.getElementById('container');
 
-      // 부모 .code-runner-editor의 --editor-vpad(px 환산)
-      function getEditorVPadPx() {
-        try {
-          const iframeEl = window.frameElement;
-          if (iframeEl && iframeEl.parentElement) {
-            const host = iframeEl.parentElement; // .code-runner-editor
-            const parentWindow = (iframeEl.ownerDocument || document).defaultView;
-            const cs = parentWindow.getComputedStyle(host);
+      const MIN_HEIGHT = 50, MAX_HEIGHT = 380;
 
-            let val = cs.getPropertyValue('--editor-vpad').trim();
-            if (!val) val = '0.75em'; // fallback
+      const [
+        { shikiToMonaco },
+        { createHighlighter },
+        { createJavaScriptRegexEngine }
+      ] = await Promise.all([
+        import('https://esm.sh/@shikijs/monaco@3.9.2'),
+        import('https://esm.sh/shiki@3.9.2'),
+        import('https://esm.sh/shiki@3.9.2/engine/javascript')
+      ]);
 
-            const hostFontPx = parseFloat(cs.fontSize) || 16;
-            if (val.endsWith('rem')) {
-              const rootFs = parseFloat(
-                parentWindow.getComputedStyle(
-                  (iframeEl.ownerDocument || document).documentElement
-                ).fontSize
-              ) || 16;
-              return Math.round(parseFloat(val) * rootFs);
-            }
-            if (val.endsWith('em')) {
-              return Math.round(parseFloat(val) * hostFontPx);
-            }
-            if (val.endsWith('px')) {
-              return Math.round(parseFloat(val));
-            }
-            const n = parseFloat(val);
-            return Number.isNaN(n) ? 12 : Math.round(n);
-          }
-        } catch (e) {}
-        return 12;
+      const highlighter = await (window._shikiHighlighterPromise ||= (async () => {
+        return await createHighlighter({
+          themes: ['dark-plus'],
+          langs: [langId],
+          engine: createJavaScriptRegexEngine()
+        });
+      })());
+
+      if (!monaco.languages.getLanguages().some(l => l.id === langId)) {
+        monaco.languages.register({ id: langId });
       }
 
-      // 회색 계열 스크롤바(테마 토큰)
-      monaco.editor.defineTheme('my-dark', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [],
-        colors: {
-          'scrollbarSlider.background':       'rgba(128,128,128,0.30)',
-          'scrollbarSlider.hoverBackground':  'rgba(128,128,128,0.50)',
-          'scrollbarSlider.activeBackground': 'rgba(128,128,128,0.70)',
-          'editorScrollbar.shadow':           '#00000000'
-        }
-      });
-      monaco.editor.setTheme('my-dark');
+      shikiToMonaco(highlighter, monaco);
 
       const vpad = getEditorVPadPx();
-
-      // Monaco 생성: 내부 padding만 사용(겉 컨테이너 패딩은 0)
       window.editor = monaco.editor.create(container, {
-        value: code,
-        language: lang,
-        theme: 'my-dark',
+        value: '',
+        language: langId,
+        theme: 'dark-plus',
         automaticLayout: false,
         minimap: { enabled: false },
-        wordWrap: 'on',
+        wordWrap: 'off',
+        scrollBeyondLastColumn: 4,
         renderLineHighlight: 'none',
         scrollBeyondLastLine: false,
         padding: { top: vpad, bottom: vpad },
         scrollbar: {
           vertical: 'auto',
-          horizontal: 'hidden',
+          horizontal: 'auto',
           verticalScrollbarSize: 6,
           horizontalScrollbarSize: 6,
           handleMouseWheel: true,
@@ -153,20 +151,15 @@
       function resizeToFit() {
         const contentHeight = window.editor.getContentHeight();
         const bounded = Math.max(MIN_HEIGHT, Math.min(contentHeight, MAX_HEIGHT));
-
-        window.editor.layout({
-          width: window.editor.getLayoutInfo().width,
-          height: bounded
-        });
-
+        const width = container.clientWidth || window.editor.getLayoutInfo().width || 0;
+        window.editor.layout({ width, height: bounded });
         container.style.height = String(bounded) + 'px';
-
         if (window.parent && window.frameElement) {
           window.frameElement.style.height = String(bounded + 2) + 'px';
         }
       }
-
       window.editor.onDidContentSizeChange(resizeToFit);
+      window.editor.setValue(code || '');
       resizeToFit();
 
       // 실행 요청 처리 (부모 → 자식)
@@ -180,24 +173,22 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            language: lang,
+            language: langId,
             version: 'latest',
             files: [{ name: filename, content: codeToRun }]
           })
         })
-        .then(function (res) { return res.json(); })
-        .then(function (j) {
-          const output = j.stdout || j.output || j.errors || j.stderr || 'No output';
-          window.parent.postMessage(
-            { type: 'run-result', id: runnerId, output: output },
-            '*'
-          );
+        .then(res => res.json())
+        .then(j => {
+          // ★ stdout/stderr/errors/output 모두 합쳐서 반환
+          const parts = [j.stdout, j.stderr, j.errors, j.output]
+            .map(x => (x==null ? '' : String(x)))
+            .filter(x => x.trim() !== '');
+          const output = parts.join('\n') || 'No output';
+          window.parent.postMessage({ type: 'run-result', id: runnerId, output }, '*');
         })
-        .catch(function (e) {
-          window.parent.postMessage(
-            { type: 'run-result', id: runnerId, output: 'Error: ' + e.message },
-            '*'
-          );
+        .catch(e => {
+          window.parent.postMessage({ type: 'run-result', id: runnerId, output: 'Error: ' + e.message }, '*');
         });
       }, false);
     });
