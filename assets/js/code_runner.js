@@ -10,7 +10,7 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // ANSI → HTML (SGR subset)
+  // ANSI -> HTML (SGR subset)
   function ansiToHtml(raw){
     if (!raw) return '';
     const sgrRe = /\x1b\[([\d;]*)m/g;
@@ -47,36 +47,30 @@
     }
     html += esc(raw.slice(i)) + close();
 
-    // ── 패턴 하이라이트(ANSI가 없어도 적용)
-    // error/warning/note
+    // 패턴 하이라이트
     html = html
       .replace(/(^|\n)(.*?\bfatal error:)/gi, (_,nl,seg)=> nl + seg.replace(/fatal error:/i,'<span class="cr-error">fatal error:</span>'))
       .replace(/(^|\n)(.*?\berror:)/gi,      (_,nl,seg)=> nl + seg.replace(/error:/i,'<span class="cr-error">error:</span>'))
       .replace(/(^|\n)(.*?\bwarning:)/gi,    (_,nl,seg)=> nl + seg.replace(/warning:/i,'<span class="cr-warning">warning:</span>'))
       .replace(/(^|\n)(.*?\bnote:)/gi,       (_,nl,seg)=> nl + seg.replace(/note:/i,'<span class="cr-note">note:</span>'));
 
-    // 파일:라인:컬럼 (줄 시작에서만)
     html = html.replace(
       /(^|\n)([^\s:<][^\n:]*?\.\w+):(\d+):(\d+):/g,
       (_, nl, file, line, col) =>
         `${nl}<span class="cr-file">${file}</span>:<span class="cr-lineno">${line}</span>:<span class="cr-col">${col}</span>:`
     );
 
-    // 코드 프레임 라인번호 " 3 | " gutter
     html = html.replace(/(^|\n)(\s*\d+\s*\|\s)/g,
       (_, nl, gut) => `${nl}<span class="cr-gutter">${gut}</span>`
     );
 
-    // caret/tilde 라인 (파이프 포함 버전): "  |     ^~~~~"
     html = html.replace(/(^|\n)(\s*\|\s*)([\^~]+)(?=(\s*)($|\n))/g,
       (_, nl, lead, marks) => `${nl}${lead}<span class="cr-caret">${marks}</span>`
     );
-    // caret/tilde 라인 (파이프 없는 독립 라인): "    ^~~~"
     html = html.replace(/(^|\n)(\s*)([\^~]+)(\s*)($|\n)/g,
       (_, nl, lead, marks, trail, end) => `${nl}${lead}<span class="cr-caret">${marks}</span>${trail}${end}`
     );
 
-    // ‘심볼’ 또는 '심볼' 강조
     html = html
       .replace(/‘([^’]+)’/g, '‘<span class="cr-symbol">$1</span>’')
       .replace(/'([^']+)'/g, '\'<span class="cr-symbol">$1</span>\'');
@@ -84,15 +78,44 @@
     return html;
   }
 
+  function sendInitToIframe(id) {
+    const iframe = getIframe(id);
+    if (!iframe) return;
+
+    // 코드/메타는 숨김 JSON 스크립트에서 가져옴
+    const holder = document.getElementById(`cr-code-${id}`);
+    let payload = null;
+    try { payload = holder ? JSON.parse(holder.textContent) : null; } catch (e) { payload = null; }
+
+    const lang = (payload && payload.lang) || (iframe.dataset.lang || 'cpp');
+    const filename = (payload && payload.filename) || (iframe.dataset.filename || 'main.cpp');
+    const code = (payload && payload.code) || '';
+
+    iframe.contentWindow.postMessage({ type:'init', id, lang, filename, code }, '*');
+  }
+
   function initRunners() {
     document.querySelectorAll('.code-runner-run').forEach(runBtn => {
       const id = runBtn.dataset.runnerId;
+      const iframe = getIframe(id);
+
+      // iframe 로드 후 초기 코드/메타 전송
+      if (iframe) {
+        if (iframe.contentWindow && iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+          sendInitToIframe(id);
+        } else {
+          iframe.addEventListener('load', () => sendInitToIframe(id), { once:true });
+        }
+      }
+
       runBtn.addEventListener('click', () => {
         const out = document.getElementById(`console-${id}`);
         if (out) out.innerHTML = '<span class="cr-note">Running…</span>';
-        const iframe = getIframe(id);
-        if (iframe) {
-          iframe.contentWindow.postMessage({ type: 'run', id }, '*');
+        const runnerIframe = getIframe(id);
+        if (runnerIframe) {
+          const lang = runnerIframe.dataset.lang || 'cpp';
+          const filename = runnerIframe.dataset.filename || 'main.cpp';
+          runnerIframe.contentWindow.postMessage({ type: 'run', id, lang, filename }, '*');
         } else if (out) {
           out.innerHTML = '<span class="cr-error">Error: editor iframe not found!</span>';
         }

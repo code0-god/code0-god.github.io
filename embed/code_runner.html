@@ -7,28 +7,12 @@
   <title>Code Runner</title>
 
   <style>
-    /* 외부 스크롤 차단, Monaco 내부 스크롤만 사용 */
-    html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      background: #1e1e1e; overflow: hidden;
-    }
-
-    /* 에디터 컨테이너(높이는 JS에서 제어) */
-    #container { width: 100%; background: #1e1e1e; }
-
-    /* 가로 스크롤 허용 */
-    .monaco-editor .overflow-guard { overflow-x: auto !important; }
-
-    /* 스크롤바 스타일 */
-    .monaco-editor .monaco-scrollable-element .scrollbar > .slider {
-      background: rgba(128,128,128,0.30) !important; border-radius: 3px !important;
-    }
-    .monaco-editor .monaco-scrollable-element .scrollbar:hover > .slider {
-      background: rgba(128,128,128,0.50) !important;
-    }
-    .monaco-editor .monaco-scrollable-element .scrollbar > .slider.active {
-      background: rgba(128,128,128,0.70) !important;
-    }
+    html, body { margin:0; padding:0; width:100%; height:100%; background:#1e1e1e; overflow:hidden; }
+    #container { width:100%; background:#1e1e1e; }
+    .monaco-editor .overflow-guard { overflow-x:auto !important; }
+    .monaco-editor .monaco-scrollable-element .scrollbar > .slider { background:rgba(128,128,128,0.30) !important; border-radius:3px !important; }
+    .monaco-editor .monaco-scrollable-element .scrollbar:hover > .slider { background:rgba(128,128,128,0.50) !important; }
+    .monaco-editor .monaco-scrollable-element .scrollbar > .slider.active { background:rgba(128,128,128,0.70) !important; }
   </style>
 
   <!-- Monaco AMD 로더 -->
@@ -43,18 +27,10 @@
 
     function parseUrlParams() {
       const url = new URL(window.location.href);
-      const rawCode = url.searchParams.get('code') || '';
-      let code = '';
-      try {
-        const urlDecoded = decodeURIComponent(rawCode);
-        const plusFixed = urlDecoded.replace(/ /g, '+');
-        code = atob(plusFixed);
-      } catch (e) { console.warn('[embed] base64 decode failed:', e); code = ''; }
       return {
         lang: (url.searchParams.get('lang') || 'cpp').trim(),
         filename: (url.searchParams.get('filename') || 'main.cpp').trim(),
-        runnerId: (url.searchParams.get('id') || '').trim(),
-        code
+        runnerId: (url.searchParams.get('id') || '').trim()
       };
     }
 
@@ -96,8 +72,9 @@
     }
 
     require(['vs/editor/editor.main'], async function () {
-      const { lang: urlLang, filename, runnerId, code } = parseUrlParams();
-      const langId = normalizeLangId(urlLang);
+      const { lang: urlLang, filename: urlFilename, runnerId } = parseUrlParams();
+      const initialLang = normalizeLangId(urlLang || 'cpp');
+      const initialFilename = urlFilename || 'main.cpp';
       const container = document.getElementById('container');
 
       const MIN_HEIGHT = 50, MAX_HEIGHT = 380;
@@ -115,21 +92,20 @@
       const highlighter = await (window._shikiHighlighterPromise ||= (async () => {
         return await createHighlighter({
           themes: ['dark-plus'],
-          langs: [langId],
+          langs: [initialLang],
           engine: createJavaScriptRegexEngine()
         });
       })());
 
-      if (!monaco.languages.getLanguages().some(l => l.id === langId)) {
-        monaco.languages.register({ id: langId });
+      if (!monaco.languages.getLanguages().some(l => l.id === initialLang)) {
+        monaco.languages.register({ id: initialLang });
       }
-
       shikiToMonaco(highlighter, monaco);
 
       const vpad = getEditorVPadPx();
       window.editor = monaco.editor.create(container, {
         value: '',
-        language: langId,
+        language: initialLang,
         theme: 'dark-plus',
         automaticLayout: false,
         minimap: { enabled: false },
@@ -159,14 +135,48 @@
         }
       }
       window.editor.onDidContentSizeChange(resizeToFit);
-      window.editor.setValue(code || '');
-      resizeToFit();
 
-      // 실행 요청 처리 (부모 → 자식)
+      // 부모가 보내는 초기화 메시지 처리
+      window.addEventListener('message', async (event) => {
+        const data = event.data;
+        if (!data || data.type !== 'init' || data.id !== runnerId) return;
+
+        const langId = normalizeLangId(data.lang || initialLang);
+        if (!monaco.languages.getLanguages().some(l => l.id === langId)) {
+          monaco.languages.register({ id: langId });
+        }
+        const model = window.editor.getModel();
+        if (model) { monaco.editor.setModelLanguage(model, langId); }
+        window.editor.setValue(String(data.code || ''));
+        resizeToFit();
+      }, false);
+
+      // 동일 출처일 때의 폴백: 부모 DOM의 JSON 스크립트에서 읽기
+      try {
+        const parentDoc = window.frameElement ? window.frameElement.ownerDocument : null;
+        const holder = parentDoc && parentDoc.getElementById(`cr-code-${runnerId}`);
+        if (holder && holder.textContent) {
+          const payload = JSON.parse(holder.textContent);
+          const langId = normalizeLangId((payload && payload.lang) || initialLang);
+          if (!monaco.languages.getLanguages().some(l => l.id === langId)) {
+            monaco.languages.register({ id: langId });
+          }
+          const model = window.editor.getModel();
+          if (model) { monaco.editor.setModelLanguage(model, langId); }
+          window.editor.setValue(String((payload && payload.code) || ''));
+          resizeToFit();
+        }
+      } catch (e) {
+        // same-origin이 아니거나 JSON 파싱 실패 시 무시
+      }
+
+      // 실행 요청 처리 (부모 -> 자식)
       window.addEventListener('message', function (event) {
         const data = event.data;
         if (!data || data.type !== 'run' || data.id !== runnerId) return;
 
+        const langId = normalizeLangId(data.lang || initialLang);
+        const filename = data.filename || initialFilename;
         const codeToRun = window.editor.getValue();
 
         fetch('https://ornate-beijinho-0548f2.netlify.app/.netlify/functions/run-code', {
@@ -180,10 +190,8 @@
         })
         .then(res => res.json())
         .then(j => {
-          // ★ stdout/stderr/errors/output 모두 합쳐서 반환
           const parts = [j.stdout, j.stderr, j.errors, j.output]
-            .map(x => (x==null ? '' : String(x)))
-            .filter(x => x.trim() !== '');
+            .map(x => (x==null ? '' : String(x))).filter(x => x.trim() !== '');
           const output = parts.join('\n') || 'No output';
           window.parent.postMessage({ type: 'run-result', id: runnerId, output }, '*');
         })
