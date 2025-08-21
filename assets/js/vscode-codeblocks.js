@@ -1,4 +1,3 @@
-// assets/js/vscode-codeblocks.js
 // Rouge 코드블럭 -> Monaco(+Shiki VS Code 테마) 치환기
 (function () {
   const FLAG = '__mono_shiki_booted__';
@@ -43,8 +42,7 @@
       box.querySelector(':scope > pre') ||
       box.querySelector(':scope pre');
     let s = (pre && pre.textContent) || '';
-    // trailing 개행 제거(마지막 빈 줄 방지)
-    s = s.replace(/\r\n/g, '\n').replace(/\n+$/,'');
+    s = s.replace(/\r\n/g, '\n').replace(/\n+$/,''); // trailing 개행 제거
     return s;
   }
 
@@ -84,7 +82,7 @@
     themesReady = true;
   }
 
-  // ----- DOM 빌드 -----
+  // ----- DOM -----
   function buildHeader(lang){
     const header=document.createElement('div');
     header.className='code-header vc-header';
@@ -96,11 +94,39 @@
   }
   function buildHost(){ const d=document.createElement('div'); d.className='monoshiki-host'; return d; }
 
-  // ----- 에디터 높이 = 내용 높이 -----
+  // 내용 높이 = 에디터 높이
   function fitHeight(editor, host){
     const h = editor.getContentHeight();
     host.style.height = h + 'px';
     editor.layout();
+  }
+
+  // ====== 전역 휠 라우터(최적): 세로는 네이티브(관성), Monaco엔 전달 차단, 가로는 에디터 ======
+  let wheelRouterInstalled = false;
+  function installGlobalWheelRouter(){
+    if (wheelRouterInstalled) return;
+
+    const onWheelCapture = (ev) => {
+      const host = ev.target && (ev.target.closest?.('.monoshiki-host'));
+      if (!host) return;                // 코드블럭 밖이면 무시
+      if (ev.ctrlKey) return;           // 브라우저 줌 제스처는 그대로
+
+      const ax = Math.abs(ev.deltaX);
+      const ay = Math.abs(ev.deltaY);
+      const horizIntent = ev.shiftKey || (ax > ay * 1.1); // 지터 보정 10%
+
+      if (horizIntent) {
+        // 가로 스크롤은 Monaco 기본 동작(필요시만 가로바 표시)
+        return;
+      }
+      // 세로: Monaco에게는 절대 전달하지 않음(성능↑), 네이티브 페이지 스크롤은 그대로
+      ev.stopPropagation();
+      // stopImmediatePropagation까지는 불필요. preventDefault()는 절대 호출 금지.
+    };
+
+    // passive:true + capture:true ⇒ 관성 스크롤 100% 유지, Monaco보다 먼저 잡음
+    window.addEventListener('wheel', onWheelCapture, { capture: true, passive: true });
+    wheelRouterInstalled = true;
   }
 
   async function transformOne(box){
@@ -139,31 +165,35 @@
       padding: { top: 10, bottom: 10 },
       overviewRulerLanes: 0,
       overviewRulerBorder: false,
-      // typo
-      fontFamily: "JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
-      fontLigatures: true,
-      fontSize: 14,
-      lineHeight: 22,
-      // 스크롤
+      mouseWheelZoom: false,         // 세로 줌 충돌 방지
+      // ↓ 휠 소비 최소화(가로 외에는 가능하면 먹지 않도록)
       scrollbar: {
-        vertical: 'hidden',   // 수직 스크롤 없음 (내용 높이에 맞춤)
+        vertical: 'hidden',
         horizontal: 'auto',
         verticalScrollbarSize: 6,
         horizontalScrollbarSize: 6,
-        useShadows: false
-      }
+        useShadows: false,
+        alwaysConsumeMouseWheel: false   // ★ 핵심
+      },
+      // 소소한 비용 줄이기
+      smoothScrolling: false,
+      dragAndDrop: false
     });
 
-    // 수직 스크롤 제거용 내용 높이 반영
+    // 클릭/선택 차단(본문만)
+    ['mousedown','mouseup','click','dblclick','contextmenu'].forEach(type=>{
+      host.addEventListener(type, ev => { ev.preventDefault(); }, true);
+    });
+
+    // 높이 반영
     fitHeight(editor, host);
     editor.onDidContentSizeChange(()=>fitHeight(editor, host));
 
     // 복사용 원문 저장
     host.setAttribute('data-raw', code);
 
-    // 완료 마킹
+    // 완료
     box.setAttribute(DONE_ATTR, '1');
-
     return editor;
   }
 
@@ -182,8 +212,9 @@
     }
     window.__monoshiki_editors__ = (window.__monoshiki_editors__ || []).concat(editors);
 
-    // 현재 테마 적용
+    // 현재 테마 적용 + 전역 휠 라우터 시작
     window.monaco && window.monaco.editor.setTheme(themeNow());
+    installGlobalWheelRouter();
   }
 
   // 테마 전환 훅
@@ -197,8 +228,8 @@
     mq && mq.addEventListener && mq.addEventListener('change', ()=>setTimeout(apply,0));
   }
 
-  // ====== 토스트(UI) ======
-  function showCopyToast(anchorEl, message='Copied!') {
+  // ====== 복사 토스트 ======
+  function showCopyToast(anchorEl, message='복사되었습니다!') {
     try{
       const toast = document.createElement('div');
       toast.className = 'copy-toast';
@@ -208,7 +239,6 @@
       `;
       document.body.appendChild(toast);
 
-      // 위치: 버튼 위·오른쪽 근처, 화면 밖이면 자동 보정
       const rect = anchorEl.getBoundingClientRect();
       const margin = 10;
       const tw = toast.offsetWidth, th = toast.offsetHeight;
@@ -216,7 +246,7 @@
       let top = rect.top - th - 8;
       if (top < margin) top = rect.bottom + 8;
 
-      let left = rect.right - tw;                    // 버튼 오른쪽 정렬
+      let left = rect.right - tw;
       if (left < margin) left = margin;
       if (left + tw > window.innerWidth - margin) left = window.innerWidth - margin - tw;
 
@@ -238,9 +268,12 @@
     const raw   = host && host.getAttribute('data-raw') || '';
     try{
       if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(raw);
-      else { const ta=document.createElement('textarea'); ta.value=raw; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
-      // 시각 피드백
-      showCopyToast(btn, 'Copied!');
+      else {
+        const ta=document.createElement('textarea');
+        ta.value=raw; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      }
+      showCopyToast(btn, '복사되었습니다!');
     }catch(err){ console.warn('[monoshiki] copy failed:', err); }
   });
 
