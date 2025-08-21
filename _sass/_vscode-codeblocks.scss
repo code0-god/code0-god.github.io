@@ -1,0 +1,144 @@
+// _sass/_vscode-codeblocks.scss
+
+:root{
+  --vc-header: rgba(255,255,255,0.04);
+  --vc-border: rgba(255,255,255,0.10);
+  --vc-bg: #1e1e1e;
+  --vc-fg: #d4d4d4;
+  --vc-subtle: rgba(255,255,255,0.60);
+
+  --vc-toast-bg: rgba(0,0,0,0.90);
+  --vc-toast-fg: #fff;
+  --vc-toast-accent: #52e07f;
+}
+[data-theme="light"], [data-mode="light"]{
+  --vc-header: rgba(0,0,0,0.03);
+  --vc-border: rgba(0,0,0,0.12);
+  --vc-bg: #ffffff;
+  --vc-fg: #333333;
+  --vc-subtle: rgba(0,0,0,0.55);
+
+  --vc-toast-bg: rgba(0,0,0,0.90);
+  --vc-toast-fg: #fff;
+  --vc-toast-accent: #22c55e;
+}
+
+/* 컨테이너 */
+.monoshiki-block{
+  background: var(--vc-bg);
+  border: 1px solid var(--vc-border);
+  border-radius: 12px;
+  overflow: hidden;
+  color: var(--vc-fg);
+  padding: 0 !important;          /* 테마 패딩 무효화 */
+}
+
+/* ── 헤더: 수직 중앙 정렬, 아이콘 간격 ── */
+.monoshiki-block > .code-header{
+  margin: 0 !important;
+  padding: 0 .9rem !important;
+  min-height: 42px;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+.monoshiki-block > .code-header.vc-header{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .5rem;
+  background: var(--vc-header);
+  border-bottom: 1px solid var(--vc-border);
+}
+.monoshiki-block > .code-header.vc-header::before{ content:none !important; }
+
+.monoshiki-block > .code-header .vc-title{
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;                    /* "</>" 와 LANG 사이 간격 */
+  height: 100%;
+  justify-self: start;
+  text-align: left;
+  color: var(--vc-subtle);
+  font-size: .86rem; font-weight: 600; letter-spacing: .2px;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1;
+}
+.monoshiki-block > .code-header .vc-title::before{ content:"</>"; opacity:.85; }
+.monoshiki-block > .code-header .vc-title::after { content: attr(data-label-text); }
+
+.monoshiki-block > .code-header button{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent; border: 0; cursor: pointer;
+  width: 34px; height: 28px; border-radius: 8px; color: inherit;
+  line-height: 1;
+}
+.monoshiki-block > .code-header button:hover{ background: rgba(127,127,127,.12); }
+
+/* Monaco 호스트 (본문은 비인터랙션: 페이지 스크롤 통과) */
+.monoshiki-host{ height: auto; max-height: none; margin: 0 !important; }
+.monoshiki-host, .monoshiki-host *{
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  pointer-events: none !important;     /* 코드 영역에서 휠/클릭 차단 -> 페이지 스크롤 */
+  -webkit-touch-callout: none !important;
+  touch-action: pan-y pinch-zoom;
+}
+
+/* ---- 우측 세로선(overview ruler/장식) 완전 제거 ---- */
+.monoshiki-block .decorationsOverviewRuler,
+.monoshiki-block .overviewRuler,
+.monoshiki-block .minimap { display:none !important; width:0 !important; }
+
+/* 남는 1px 경계선/그림자 제거 */
+.monoshiki-block .monaco-editor .margin { border-right: 0 !important; }
+.monoshiki-block .scroll-decoration     { box-shadow: none !important; height:0 !important; }
+
+/* 에디터 모서리 라운드 일치 */
+.monaco-editor, .monaco-editor .overflow-guard{ border-radius: 0 !important; }
+
+/* ====== 복사 토스트 ====== */
+.copy-toast{
+  position: fixed;
+  z-index: 2147483647;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity .18s ease, transform .18s ease;
+  pointer-events: none; /* 클릭 방해 X */
+}
+.copy-toast.show{ opacity:1; transform: translateY(0); }
+
+.copy-toast .bubble{
+  background: var(--vc-toast-bg);
+  color: var(--vc-toast-fg);
+  font-size: .85rem;
+  padding: .45rem .6rem;
+  border-radius: 8px;
+  position: relative;
+  white-space: nowrap;
+}
+.copy-toast .bubble::after{
+  content:'';
+  position:absolute;
+  right:-6px; top:50%;
+  transform: translateY(-50%);
+  border-width:6px 0 6px 6px;
+  border-style: solid;
+  border-color: transparent transparent transparent var(--vc-toast-bg);
+}
+.copy-toast .icon{
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  border: 2px solid var(--vc-toast-accent);
+  color: var(--vc-toast-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
