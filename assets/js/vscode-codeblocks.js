@@ -229,7 +229,7 @@
   }
 
   // ====== 복사 토스트 ======
-  function showCopyToast(anchorEl, message='복사되었습니다!') {
+  function showCopyToast(anchorEl, message='Copied!') {
     try{
       const toast = document.createElement('div');
       toast.className = 'copy-toast';
@@ -273,7 +273,7 @@
         ta.value=raw; ta.style.position='fixed'; ta.style.opacity='0';
         document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
       }
-      showCopyToast(btn, '복사되었습니다!');
+      showCopyToast(btn, 'Copied!');
     }catch(err){ console.warn('[monoshiki] copy failed:', err); }
   });
 
