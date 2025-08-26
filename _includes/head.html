@@ -110,6 +110,10 @@
   <!-- Code Blocks -->
   <script src="{{ '/assets/js/vscode-codeblocks.js' | relative_url }}" defer></script>
 
+  <!-- Sidebar Toggle -->
+  {% include sidebar-toggle.html %}
+  <script src="{{ '/assets/js/sidebar-toggle.js' | relative_url }}" defer></script>
+
   {% include js-selector.html lang=lang %}
 
   {% if jekyll.environment == 'production' %}
