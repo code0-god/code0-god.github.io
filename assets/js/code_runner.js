@@ -1,6 +1,4 @@
 (function () {
-  console.log('[parent] code_runner.js loaded');
-
   function getIframe(id) {
     return document.querySelector(`#editor-${id} iframe`);
   }
@@ -55,16 +53,16 @@
       .replace(/(^|\n)(.*?\bnote:)/gi,       (_,nl,seg)=> nl + seg.replace(/note:/i,'<span class="cr-note">note:</span>'));
 
     html = html.replace(
-      /(^|\n)([^\s:<][^\n:]*?\.\w+):(\d+):(\d+):/g,
+      /(^|\n)([^\s:<][^\n:]*?\.\w+):(\d+)(?::(\d+))?:/g,
       (_, nl, file, line, col) =>
-        `${nl}<span class="cr-file">${file}</span>:<span class="cr-lineno">${line}</span>:<span class="cr-col">${col}</span>:`
+        `${nl}<span class="cr-file">${file}</span>:<span class="cr-lineno">${line}</span>:` + (col ? `<span class="cr-col">${col}</span>:` : '')
     );
 
-    html = html.replace(/(^|\n)(\s*\d+\s*\|\s)/g,
+    html = html.replace(/(^|\n)(\s*\d+\s*[|│]\s)/g,
       (_, nl, gut) => `${nl}<span class="cr-gutter">${gut}</span>`
     );
 
-    html = html.replace(/(^|\n)(\s*\|\s*)([\^~]+)(?=(\s*)($|\n))/g,
+    html = html.replace(/(^|\n)(\s*[|│]\s*)([\^~]+)(?=(\s*)($|\n))/g,
       (_, nl, lead, marks) => `${nl}${lead}<span class="cr-caret">${marks}</span>`
     );
     html = html.replace(/(^|\n)(\s*)([\^~]+)(\s*)($|\n)/g,
@@ -73,7 +71,7 @@
 
     html = html
       .replace(/‘([^’]+)’/g, '‘<span class="cr-symbol">$1</span>’')
-      .replace(/'([^']+)'/g, '\'<span class="cr-symbol">$1</span>\'');
+      .replace(/'([^']+)'/g, "'<span class=\"cr-symbol\">$1</span>'" );
 
     return html;
   }
@@ -87,11 +85,10 @@
     let payload = null;
     try { payload = holder ? JSON.parse(holder.textContent) : null; } catch (e) { payload = null; }
 
-    const lang = (payload && payload.lang) || (iframe.dataset.lang || 'cpp');
-    const filename = (payload && payload.filename) || (iframe.dataset.filename || 'main.cpp');
-    const code = (payload && payload.code) || '';
+    const lang = (payload && payload.language) || (iframe.dataset.lang || 'cpp');
+    const files = (payload && payload.files) || [];
 
-    iframe.contentWindow.postMessage({ type:'init', id, lang, filename, code }, '*');
+    iframe.contentWindow.postMessage({ type:'init', id, lang, files }, '*');
   }
 
   function initRunners() {
@@ -113,11 +110,32 @@
         if (out) out.innerHTML = '<span class="cr-note">Running…</span>';
         const runnerIframe = getIframe(id);
         if (runnerIframe) {
-          const lang = runnerIframe.dataset.lang || 'cpp';
-          const filename = runnerIframe.dataset.filename || 'main.cpp';
-          runnerIframe.contentWindow.postMessage({ type: 'run', id, lang, filename }, '*');
+          // Request all file contents from the iframe
+          runnerIframe.contentWindow.postMessage({ type: 'get-all-files', id }, '*');
         } else if (out) {
           out.innerHTML = '<span class="cr-error">Error: editor iframe not found!</span>';
+        }
+      });
+    });
+  }
+
+  function initTabs() {
+    document.querySelectorAll('.code-runner-tab').forEach(tabBtn => {
+      tabBtn.addEventListener('click', () => {
+        const id = tabBtn.dataset.runnerId;
+        const filename = tabBtn.dataset.filename;
+        const iframe = getIframe(id);
+
+        // Deactivate all tabs for this runner
+        document.querySelectorAll(`.code-runner-wrapper[id="runner-${id}"] .code-runner-tab`).forEach(btn => {
+          btn.classList.remove('active');
+        });
+        // Activate the clicked tab
+        tabBtn.classList.add('active');
+
+        // Tell the iframe to switch the displayed file
+        if (iframe) {
+          iframe.contentWindow.postMessage({ type: 'switch-file', id, filename }, '*');
         }
       });
     });
@@ -129,12 +147,24 @@
       if (!out) return;
       const raw = String(event.data.output || '');
       out.innerHTML = ansiToHtml(raw);
+    } else if (event.data && event.data.type === 'all-files-result' && event.data.id) {
+      const id = event.data.id;
+      const files = event.data.files;
+      const runnerIframe = getIframe(id);
+      if (runnerIframe) {
+        const lang = runnerIframe.dataset.lang || 'cpp';
+        runnerIframe.contentWindow.postMessage({ type: 'run', id, lang, files }, '*');
+      }
     }
   });
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initRunners);
+    document.addEventListener('DOMContentLoaded', () => {
+      initRunners();
+      initTabs();
+    });
   } else {
     initRunners();
+    initTabs();
   }
 })();

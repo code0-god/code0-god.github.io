@@ -29,7 +29,6 @@
       const url = new URL(window.location.href);
       return {
         lang: (url.searchParams.get('lang') || 'cpp').trim(),
-        filename: (url.searchParams.get('filename') || 'main.cpp').trim(),
         runnerId: (url.searchParams.get('id') || '').trim()
       };
     }
@@ -71,13 +70,15 @@
       return map[raw] || raw;
     }
 
+    let editor;
+    let fileModels = {}; // Stores Monaco models for each file
+    let currentFilename = '';
+
     require(['vs/editor/editor.main'], async function () {
-      const { lang: urlLang, filename: urlFilename, runnerId } = parseUrlParams();
+      const { lang: urlLang, runnerId } = parseUrlParams();
       const initialLang = normalizeLangId(urlLang || 'cpp');
-      const initialFilename = urlFilename || 'main.cpp';
       const container = document.getElementById('container');
 
-      const MIN_HEIGHT = 50, MAX_HEIGHT = 380;
 
       const [
         { shikiToMonaco },
@@ -103,7 +104,7 @@
       shikiToMonaco(highlighter, monaco);
 
       const vpad = getEditorVPadPx();
-      window.editor = monaco.editor.create(container, {
+      editor = monaco.editor.create(container, {
         value: '',
         language: initialLang,
         theme: 'dark-plus',
@@ -115,26 +116,46 @@
         scrollBeyondLastLine: false,
         padding: { top: vpad, bottom: vpad },
         scrollbar: {
-          vertical: 'auto',
+          vertical: 'hidden',
           horizontal: 'auto',
-          verticalScrollbarSize: 6,
+          verticalScrollbarSize: 0,
           horizontalScrollbarSize: 6,
           handleMouseWheel: true,
+          alwaysConsumeMouseWheel: false,
           useShadows: false
         }
       });
 
       function resizeToFit() {
-        const contentHeight = window.editor.getContentHeight();
-        const bounded = Math.max(MIN_HEIGHT, Math.min(contentHeight, MAX_HEIGHT));
-        const width = container.clientWidth || window.editor.getLayoutInfo().width || 0;
-        window.editor.layout({ width, height: bounded });
-        container.style.height = String(bounded) + 'px';
+        const contentHeight = editor.getContentHeight();
+        const width = container.clientWidth || editor.getLayoutInfo().width || 0;
+        const h = Math.max(1, contentHeight); // 0 방지
+        editor.layout({ width, height: h });
+        container.style.height = String(h) + 'px';
         if (window.parent && window.frameElement) {
-          window.frameElement.style.height = String(bounded + 2) + 'px';
+          window.frameElement.style.height = String(h + 2) + 'px';
         }
       }
-      window.editor.onDidContentSizeChange(resizeToFit);
+      editor.onDidContentSizeChange(resizeToFit);
+      window.addEventListener('resize', resizeToFit);
+
+      // === VSCode 스타일: 네이티브 수직 스크롤 유지(관성), 에디터 수평만 허용 ===
+      // 캡처 + 패시브: 브라우저 스크롤 파이프라인(Compositor) 방해 X
+      const onWheelCapture = (e) => {
+        // 코드 에디터 영역 외면 무시
+        if (!container.contains(e.target)) return;
+        if (e.ctrlKey) return; // 확대/축소 제스처 그대로
+        const ax = Math.abs(e.deltaX), ay = Math.abs(e.deltaY);
+        const horizIntent = e.shiftKey || (ax > ay * 1.1); // 10% 지터 보정
+        if (!horizIntent) {
+          // 수직 스크롤: 에디터에 전달하지 않음(버블 차단만)
+          // 기본 동작(페이지 스크롤)은 브라우저가 처리 → 아주 부드러움
+          e.stopPropagation();
+          // 절대 preventDefault() 하지 마세요!
+        }
+        // 수평 스크롤은 통과 → Monaco가 가로 스크롤 처리
+      };
+      window.addEventListener('wheel', onWheelCapture, { capture: true, passive: true });
 
       // 부모가 보내는 초기화 메시지 처리
       window.addEventListener('message', async (event) => {
@@ -142,12 +163,21 @@
         if (!data || data.type !== 'init' || data.id !== runnerId) return;
 
         const langId = normalizeLangId(data.lang || initialLang);
-        if (!monaco.languages.getLanguages().some(l => l.id === langId)) {
-          monaco.languages.register({ id: langId });
+        const files = data.files || [];
+
+        // Create models for all files
+        fileModels = {};
+        files.forEach(file => {
+          const model = monaco.editor.createModel(file.content, langId, monaco.Uri.file(file.name));
+          fileModels[file.name] = model;
+        });
+
+        // Set the editor to display the first file
+        if (files.length > 0) {
+          editor.setModel(fileModels[files[0].name]);
+          currentFilename = files[0].name;
         }
-        const model = window.editor.getModel();
-        if (model) { monaco.editor.setModelLanguage(model, langId); }
-        window.editor.setValue(String(data.code || ''));
+
         resizeToFit();
       }, false);
 
@@ -157,18 +187,49 @@
         const holder = parentDoc && parentDoc.getElementById(`cr-code-${runnerId}`);
         if (holder && holder.textContent) {
           const payload = JSON.parse(holder.textContent);
-          const langId = normalizeLangId((payload && payload.lang) || initialLang);
-          if (!monaco.languages.getLanguages().some(l => l.id === langId)) {
-            monaco.languages.register({ id: langId });
+          const langId = normalizeLangId((payload && payload.language) || initialLang);
+          const files = (payload && payload.files) || [];
+
+          fileModels = {};
+          files.forEach(file => {
+            const model = monaco.editor.createModel(file.content, langId, monaco.Uri.file(file.name));
+            fileModels[file.name] = model;
+          });
+
+          if (files.length > 0) {
+            editor.setModel(fileModels[files[0].name]);
+            currentFilename = files[0].name;
           }
-          const model = window.editor.getModel();
-          if (model) { monaco.editor.setModelLanguage(model, langId); }
-          window.editor.setValue(String((payload && payload.code) || ''));
           resizeToFit();
         }
       } catch (e) {
         // same-origin이 아니거나 JSON 파싱 실패 시 무시
       }
+
+      // 파일 전환 요청 처리 (부모 -> 자식)
+      window.addEventListener('message', function (event) {
+        const data = event.data;
+        if (!data || data.type !== 'switch-file' || data.id !== runnerId) return;
+
+        const filenameToSwitch = data.filename;
+        if (fileModels[filenameToSwitch]) {
+          editor.setModel(fileModels[filenameToSwitch]);
+          currentFilename = filenameToSwitch;
+          resizeToFit();
+        }
+      }, false);
+
+      // 모든 파일 내용 요청 처리 (부모 -> 자식)
+      window.addEventListener('message', function (event) {
+        const data = event.data;
+        if (!data || data.type !== 'get-all-files' || data.id !== runnerId) return;
+
+        const updatedFiles = Object.keys(fileModels).map(name => ({
+          name: name,
+          content: fileModels[name].getValue()
+        }));
+        window.parent.postMessage({ type: 'all-files-result', id: runnerId, files: updatedFiles }, '*');
+      }, false);
 
       // 실행 요청 처리 (부모 -> 자식)
       window.addEventListener('message', function (event) {
@@ -176,8 +237,7 @@
         if (!data || data.type !== 'run' || data.id !== runnerId) return;
 
         const langId = normalizeLangId(data.lang || initialLang);
-        const filename = data.filename || initialFilename;
-        const codeToRun = window.editor.getValue();
+        const filesToRun = data.files; // Now receives all files from parent
 
         fetch('https://ornate-beijinho-0548f2.netlify.app/.netlify/functions/run-code', {
           method: 'POST',
@@ -185,7 +245,7 @@
           body: JSON.stringify({
             language: langId,
             version: 'latest',
-            files: [{ name: filename, content: codeToRun }]
+            files: filesToRun
           })
         })
         .then(res => res.json())

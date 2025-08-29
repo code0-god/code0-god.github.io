@@ -9,7 +9,7 @@
   flex-direction: column;
 }
 
-/* ─── HEADER ─── */
+/* --- HEADER --- */
 .code-runner-header {
   display: flex;
   justify-content: space-between;
@@ -17,6 +17,39 @@
   padding: 0.6em 1em;
   background: linear-gradient(135deg, #2b2b2b, #1f1f1f);
   border-bottom: 1px solid #555;
+}
+
+.code-runner-tabs {
+  display: flex;
+  flex-grow: 1;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-right: 1em; /* Space between tabs and run button */
+}
+
+.code-runner-tab {
+  background: none;
+  border: none;
+  color: #a0a0a0;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.9em;
+  white-space: nowrap;
+  transition: color 0.2s, background-color 0.2s;
+  border-radius: 4px 4px 0 0;
+  margin-right: 2px;
+}
+
+.code-runner-tab:hover {
+  color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.code-runner-tab.active {
+  color: #fff;
+  background-color: #3a3a3a;
+  font-weight: 600;
 }
 
 .code-runner-filename {
@@ -45,19 +78,17 @@
 }
 .code-runner-run:hover { background:#ad3246; border-color:#8b2938; }
 
-/* ─── EDITOR ─── */
+/* --- EDITOR --- */
 .code-runner-editor {
   --editor-vpad: 0.75em;
   background: #1e1e1e;
   padding: 0;
-  min-height: 50px;
-  max-height: 380px;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-/* ─── CONSOLE ─── */
+/* --- CONSOLE --- */
 .code-runner-console {
   padding: 1rem;
   background: #0e0e0e;
