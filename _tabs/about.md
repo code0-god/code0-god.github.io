@@ -47,6 +47,17 @@ Baekjoon problem write‑ups, algorithm optimizations, and competitive programmi
 - ***Reflections***   
 Lessons from failures, performance tuning stories, debugging journeys, and retrospective analyses.
 
+## ***Categories***
+- ***C/C++***   
+Key aspects of the **C** and **C++** languages: syntax and semantics, standard libraries, and practical usage.
+Reference standards are *C17* and *C++20*. C++ is the main topic, and foundational C concepts are covered when needed.
+
+- ***Linux***   
+Linux for development environments and command-line work: CLI utilities (`bash`, `grep`, `find`, `chmod`), toolchain and shell setup, package management, Bash scripting, file systems and permissions, and developer tools (`tmux`, `vim`, `git`).
+
+- ***Research***   
+Notes on AI-acceleration research, such as running dynamic DNN workloads with **Gemmini** and **llama.cpp**, and paper reviews.
+
 ## ***How to Navigate***
 1. ***Home***   
 A rolling feed of the latest logs and posts.

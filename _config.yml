@@ -190,6 +190,14 @@ defaults:
     values:
       layout: page
       permalink: /:title/
+  - scope:
+      path: embed
+    values:
+      sitemap: false
+  - scope:
+      path: google459f720f58ef273b.html
+    values:
+      sitemap: false
 
 sass:
   style: compressed
