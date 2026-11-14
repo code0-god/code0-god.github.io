@@ -1,4 +1,11 @@
 <!-- A placeholder to allow defining custom metadata -->
 <meta name="google-adsense-account" content="ca-pub-8215121812485565">
+{%- comment -%}
+  Do not serve ads on screens without publisher content:
+  the 404 page, tag/category/archive listings, and pages with `ads: false`.
+{%- endcomment -%}
+{%- assign no_ads_layouts = 'archives,tags,tag,categories,category' | split: ',' -%}
+{%- unless page.ads == false or page.url == '/404.html' or no_ads_layouts contains page.layout -%}
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8215121812485565"
      crossorigin="anonymous"></script>
+{%- endunless -%}
